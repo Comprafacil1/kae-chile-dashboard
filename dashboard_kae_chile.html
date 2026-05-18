@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard KAE · Gestión Comercial Chile · Pooling Logístico</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0d1117;
+  --bg2: #161b22;
+  --bg3: #1c2230;
+  --bg4: #222a3a;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.12);
+  --text: #e6edf3;
+  --text2: #8b949e;
+  --text3: #6e7681;
+  --accent: #1d6fa8;
+  --accent2: #2ea043;
+  --accent3: #e3a008;
+  --danger: #da3633;
+  --teal: #0d8a6a;
+  --purple: #6e40c9;
+  --font: 'DM Sans', sans-serif;
+  --mono: 'DM Mono', monospace;
+  --r: 10px;
+  --r2: 6px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: var(--bg2); }
+::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 4px; }
+
+/* TOPBAR */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 20px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 100;
+}
+.topbar-left { display: flex; align-items: center; gap: 12px; }
+.logo {
+  background: linear-gradient(135deg, #1d6fa8, #0d8a6a);
+  color: #fff; font-size: 10px; font-weight: 600; letter-spacing: 1.5px;
+  padding: 5px 12px; border-radius: 4px; text-transform: uppercase;
+}
+.topbar-title { font-size: 13px; font-weight: 500; color: var(--text); }
+.topbar-sub { font-size: 10px; color: var(--text3); }
+.topbar-right { display: flex; align-items: center; gap: 8px; }
+.live-badge {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 10px; color: var(--accent2); font-weight: 500;
+  background: rgba(46,160,67,0.1); padding: 3px 8px; border-radius: 20px;
+  border: 1px solid rgba(46,160,67,0.2);
+}
+.live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent2); animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+.edit-toggle {
+  font-size: 10px; font-weight: 500; padding: 4px 12px; border-radius: 20px;
+  border: 1px solid var(--border2); background: var(--bg3); color: var(--text2);
+  cursor: pointer; transition: all 0.2s;
+}
+.edit-toggle:hover { background: var(--bg4); color: var(--text); }
+.edit-toggle.active { background: rgba(29,111,168,0.15); border-color: var(--accent); color: #58a6ff; }
+.period-btn {
+  font-size: 10px; padding: 4px 10px; border-radius: 4px; border: 1px solid var(--border);
+  background: transparent; color: var(--text3); cursor: pointer; transition: all 0.2s;
+}
+.period-btn.active, .period-btn:hover { background: var(--bg4); color: var(--text2); border-color: var(--border2); }
+
+/* MAIN LAYOUT */
+.main { padding: 16px 20px; max-width: 1600px; margin: 0 auto; }
+
+/* SECTION HEADERS */
+.sec-head {
+  display: flex; align-items: center; gap: 10px; margin: 20px 0 10px;
+  padding-bottom: 8px; border-bottom: 1px solid var(--border);
+}
+.sec-num {
+  font-size: 9px; font-weight: 600; letter-spacing: 1.5px; color: var(--accent);
+  background: rgba(29,111,168,0.1); padding: 2px 7px; border-radius: 3px;
+  border: 1px solid rgba(29,111,168,0.2); font-family: var(--mono);
+}
+.sec-title { font-size: 12px; font-weight: 500; color: var(--text2); letter-spacing: 0.3px; }
+.sec-action { margin-left: auto; font-size: 10px; color: var(--accent2); }
+
+/* KPI GRID */
+.kpi-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.kpi {
+  background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r);
+  padding: 14px 16px; position: relative; overflow: hidden; transition: border-color 0.2s;
+}
+.kpi:hover { border-color: var(--border2); }
+.kpi::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+}
+.kpi.blue::after { background: linear-gradient(90deg,var(--accent),transparent); }
+.kpi.green::after { background: linear-gradient(90deg,var(--accent2),transparent); }
+.kpi.amber::after { background: linear-gradient(90deg,var(--accent3),transparent); }
+.kpi.teal::after { background: linear-gradient(90deg,var(--teal),transparent); }
+.kpi.purple::after { background: linear-gradient(90deg,var(--purple),transparent); }
+.kpi-label { font-size: 10px; color: var(--text3); margin-bottom: 6px; letter-spacing: 0.3px; }
+.kpi-val {
+  font-size: 24px; font-weight: 300; color: var(--text);
+  font-family: var(--mono); line-height: 1;
+  outline: none; background: transparent;
+}
+.kpi-val[contenteditable="true"] {
+  border-bottom: 1px dashed var(--accent); cursor: text;
+  padding-bottom: 1px;
+}
+.kpi-delta { font-size: 10px; margin-top: 5px; display: flex; align-items: center; gap: 3px; }
+.up { color: var(--accent2); }
+.down { color: var(--danger); }
+.flat { color: var(--text3); }
+
+/* GRID LAYOUTS */
+.g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+.g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+.g4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+.g23 { display: grid; grid-template-columns: 2fr 3fr; gap: 10px; margin-bottom: 10px; }
+.g32 { display: grid; grid-template-columns: 3fr 2fr; gap: 10px; margin-bottom: 10px; }
+
+/* CARDS */
+.card {
+  background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r);
+  padding: 14px 16px; transition: border-color 0.2s;
+}
+.card:hover { border-color: var(--border2); }
+.card-title {
+  font-size: 11px; font-weight: 500; color: var(--text2);
+  margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;
+}
+.card-title-left { display: flex; align-items: center; gap: 6px; }
+.card-badge {
+  font-size: 9px; padding: 2px 6px; border-radius: 3px; font-weight: 500;
+  background: var(--bg4); color: var(--text3);
+}
+
+/* HEALTH TABLE */
+.ht { width: 100%; border-collapse: collapse; }
+.ht th { font-size: 9px; color: var(--text3); font-weight: 500; padding: 0 6px 8px; text-align: left; letter-spacing: 0.5px; text-transform: uppercase; }
+.ht td { padding: 7px 6px; border-top: 1px solid var(--border); font-size: 11px; }
+.ht tr:hover td { background: var(--bg3); }
+.dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+.dot-g { background: #3fb950; }
+.dot-y { background: #d29922; }
+.dot-r { background: #da3633; }
+.hs-badge {
+  font-size: 10px; font-weight: 500; font-family: var(--mono);
+  padding: 2px 7px; border-radius: 3px; display: inline-block;
+}
+.hs-g { background: rgba(63,185,80,0.1); color: #3fb950; }
+.hs-y { background: rgba(210,153,34,0.1); color: #d29922; }
+.hs-r { background: rgba(218,54,51,0.1); color: #f85149; }
+.client-name { font-weight: 500; color: var(--text); }
+.client-seg { font-size: 9px; color: var(--text3); }
+.accion-btn {
+  font-size: 9px; padding: 2px 8px; border-radius: 3px;
+  border: 1px solid var(--border2); background: transparent; color: var(--text3);
+  cursor: pointer; transition: all 0.15s; white-space: nowrap;
+}
+.accion-btn:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+.accion-btn.urgent { border-color: rgba(218,54,51,0.4); color: #f85149; }
+.accion-btn.urgent:hover { background: var(--danger); border-color: var(--danger); color: #fff; }
+.rev-editable {
+  font-family: var(--mono); font-size: 11px; color: var(--text2);
+  outline: none; background: transparent;
+  border-bottom: 1px dashed transparent; transition: border-color 0.2s;
+}
+.rev-editable[contenteditable="true"] { border-bottom-color: var(--accent); }
+
+/* FUNNEL */
+.funnel { display: flex; flex-direction: column; gap: 5px; }
+.funnel-step { display: flex; align-items: center; gap: 8px; }
+.funnel-lbl { font-size: 10px; color: var(--text3); min-width: 80px; }
+.funnel-bar-bg { flex: 1; background: var(--bg4); border-radius: 3px; height: 20px; overflow: hidden; }
+.funnel-bar-fill { height: 100%; border-radius: 3px; display: flex; align-items: center; padding: 0 8px; transition: width 0.5s ease; }
+.funnel-fill-val { font-size: 10px; font-weight: 500; color: rgba(255,255,255,0.85); font-family: var(--mono); }
+.funnel-right { font-size: 10px; color: var(--text3); min-width: 40px; text-align: right; font-family: var(--mono); }
+
+/* SLA */
+.sla-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--border); }
+.sla-row:last-child { border-bottom: none; }
+.sla-lbl { font-size: 11px; color: var(--text2); flex: 1; }
+.sla-pct { font-size: 12px; font-family: var(--mono); font-weight: 500; min-width: 45px; text-align: right; outline: none; background: transparent; }
+.sla-pct[contenteditable="true"] { border-bottom: 1px dashed var(--accent); }
+.sla-semaforo { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.sla-ok { background: #3fb950; box-shadow: 0 0 6px rgba(63,185,80,0.4); }
+.sla-warn { background: #d29922; box-shadow: 0 0 6px rgba(210,153,34,0.4); }
+.sla-crit { background: #da3633; box-shadow: 0 0 6px rgba(218,54,51,0.4); }
+
+/* VISIT TRACKER */
+.visit-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 8px; }
+.visit-day { text-align: center; }
+.visit-day-lbl { font-size: 8px; color: var(--text3); margin-bottom: 3px; }
+.visit-cell {
+  height: 28px; border-radius: 4px; display: flex; align-items: center; justify-content: center;
+  font-size: 9px; font-weight: 500; cursor: pointer; transition: all 0.15s;
+  border: 1px solid var(--border);
+}
+.visit-cell.done { background: rgba(29,111,168,0.2); border-color: rgba(29,111,168,0.4); color: #58a6ff; }
+.visit-cell.pending { background: rgba(210,153,34,0.1); border-color: rgba(210,153,34,0.3); color: #d29922; }
+.visit-cell.free { background: var(--bg3); color: var(--text3); }
+.visit-cell:hover { transform: scale(1.05); }
+
+/* MINI STATS */
+.mini-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.mini-stat { background: var(--bg3); border-radius: var(--r2); padding: 8px 10px; }
+.mini-stat-lbl { font-size: 9px; color: var(--text3); }
+.mini-stat-val { font-size: 16px; font-weight: 500; color: var(--text); font-family: var(--mono); outline: none; background: transparent; }
+.mini-stat-val[contenteditable="true"] { border-bottom: 1px dashed var(--accent); }
+
+/* ALERT SECTION */
+.alert-section {
+  border: 1px solid rgba(218,54,51,0.3); border-radius: var(--r);
+  background: var(--bg2); margin-bottom: 10px; overflow: hidden;
+}
+.alert-header {
+  display: flex; align-items: center; gap: 10px; padding: 12px 16px;
+  border-bottom: 1px solid rgba(218,54,51,0.2);
+  background: rgba(218,54,51,0.04);
+}
+.alert-tag {
+  font-size: 9px; font-weight: 600; letter-spacing: 1.5px;
+  background: rgba(218,54,51,0.15); color: #f85149;
+  padding: 3px 8px; border-radius: 3px; border: 1px solid rgba(218,54,51,0.3);
+  text-transform: uppercase;
+}
+.alert-title { font-size: 12px; font-weight: 500; color: var(--text); }
+.alert-sub { font-size: 10px; color: var(--text3); margin-left: auto; }
+.alert-body { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0; }
+.alert-col { padding: 14px 16px; border-right: 1px solid var(--border); }
+.alert-col:last-child { border-right: none; }
+.alert-col-title {
+  font-size: 9px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase;
+  margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border);
+}
+.risk-item { display: flex; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--border); }
+.risk-item:last-child { border-bottom: none; }
+.risk-n { font-size: 9px; color: var(--text3); font-family: var(--mono); min-width: 14px; margin-top: 1px; }
+.risk-content { flex: 1; }
+.risk-name { font-size: 11px; font-weight: 500; color: var(--text); }
+.risk-reason { font-size: 10px; color: #f85149; margin-top: 1px; }
+.opp-desc { font-size: 10px; color: #3fb950; margin-top: 1px; }
+.opp-val { font-size: 9px; color: var(--text3); font-family: var(--mono); }
+.trigger-item {
+  display: flex; gap: 8px; padding: 8px 10px; border-radius: var(--r2);
+  border: 1px solid var(--border); background: var(--bg3); margin-bottom: 5px;
+}
+.trigger-icon { font-size: 14px; }
+.trigger-text { font-size: 10px; color: var(--text2); line-height: 1.4; }
+.trigger-text strong { color: var(--text); font-weight: 500; }
+.trigger-t-r { border-color: rgba(218,54,51,0.25); background: rgba(218,54,51,0.04); }
+.trigger-t-y { border-color: rgba(210,153,34,0.25); background: rgba(210,153,34,0.04); }
+.trigger-t-b { border-color: rgba(29,111,168,0.25); background: rgba(29,111,168,0.04); }
+
+/* ACTION ROWS */
+.action-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 0; border-bottom: 1px solid var(--border);
+}
+.action-row:last-child { border-bottom: none; }
+.action-date { font-size: 9px; color: var(--text3); font-family: var(--mono); min-width: 36px; }
+.action-text { font-size: 11px; color: var(--text2); flex: 1; }
+.priority-badge { font-size: 9px; padding: 2px 6px; border-radius: 3px; white-space: nowrap; }
+.p-urg { background: rgba(218,54,51,0.1); color: #f85149; border: 1px solid rgba(218,54,51,0.2); }
+.p-high { background: rgba(210,153,34,0.1); color: #d29922; border: 1px solid rgba(210,153,34,0.2); }
+.p-med { background: rgba(29,111,168,0.1); color: #58a6ff; border: 1px solid rgba(29,111,168,0.2); }
+
+/* CHART WRAPPERS */
+.chart-wrap { position: relative; width: 100%; }
+
+/* ROUTE MINI CARDS */
+.route-mini { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-bottom: 10px; }
+.route-card { background: var(--bg3); border-radius: var(--r2); padding: 8px; text-align: center; }
+.route-val { font-size: 16px; font-weight: 500; font-family: var(--mono); color: var(--text); outline: none; background: transparent; }
+.route-val[contenteditable="true"] { border-bottom: 1px dashed var(--accent); }
+.route-lbl { font-size: 9px; color: var(--text3); }
+.route-delta { font-size: 10px; color: var(--accent2); }
+
+/* NPS BIG */
+.nps-big { font-size: 44px; font-weight: 300; font-family: var(--mono); color: #3fb950; outline: none; background: transparent; display: inline-block; }
+.nps-big[contenteditable="true"] { border-bottom: 1px dashed var(--accent2); }
+
+/* FOOTER */
+.footer {
+  margin-top: 20px; padding: 12px 20px;
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 10px; color: var(--text3);
+}
+.footer-right { display: flex; gap: 8px; align-items: center; }
+.footer-btn {
+  font-size: 10px; padding: 4px 12px; border-radius: 4px;
+  border: 1px solid var(--border2); background: var(--bg3); color: var(--text2);
+  cursor: pointer; transition: all 0.15s;
+}
+.footer-btn:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+.footer-btn.save { background: rgba(46,160,67,0.1); border-color: rgba(46,160,67,0.3); color: var(--accent2); }
+.footer-btn.save:hover { background: var(--accent2); color: #fff; }
+
+/* EDIT MODE GLOW */
+.edit-mode .kpi-val[contenteditable], .edit-mode .sla-pct[contenteditable],
+.edit-mode .mini-stat-val[contenteditable], .edit-mode .rev-editable[contenteditable],
+.edit-mode .route-val[contenteditable], .edit-mode .nps-big[contenteditable] {
+  animation: editGlow 2s infinite;
+}
+@keyframes editGlow { 0%,100%{box-shadow:none} 50%{box-shadow:0 2px 8px rgba(29,111,168,0.3)} }
+
+/* TOOLTIP */
+.tooltip { position: relative; }
+.tooltip:hover::after {
+  content: attr(data-tip); position: absolute; bottom: 110%; left: 50%; transform: translateX(-50%);
+  background: #1c2230; border: 1px solid var(--border2); border-radius: 4px;
+  padding: 4px 8px; font-size: 10px; color: var(--text); white-space: nowrap; z-index: 999;
+}
+
+/* PRESENCIAL BANNER */
+.presencial-banner {
+  display: flex; align-items: center; gap: 10px; padding: 8px 14px;
+  background: rgba(13,138,106,0.08); border: 1px solid rgba(13,138,106,0.2);
+  border-radius: var(--r2); margin-bottom: 10px; font-size: 10px; color: var(--text2);
+}
+.presencial-badge {
+  font-size: 9px; font-weight: 600; background: rgba(13,138,106,0.15);
+  color: #3fb950; padding: 2px 7px; border-radius: 3px; letter-spacing: 0.5px;
+  border: 1px solid rgba(13,138,106,0.3); white-space: nowrap;
+}
+
+/* PRINT / EXPORT */
+@media print {
+  .topbar-right, .footer-right, .accion-btn, .edit-toggle { display: none !important; }
+  body { background: #fff; color: #000; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo">PALLETCO</div>
+    <div>
+      <div class="topbar-title">Dashboard de Gestión Comercial · Key Account Executive</div>
+      <div class="topbar-sub">Cartera Chile · Retail, FMCG & Manufactura · Pooling Logístico · Economía Circular</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="live-badge"><div class="live-dot"></div> En vivo</div>
+    <button class="period-btn active" onclick="setPeriod(this,'Q2 2026')">Q2 2026</button>
+    <button class="period-btn" onclick="setPeriod(this,'YTD')">YTD</button>
+    <button class="period-btn" onclick="setPeriod(this,'12M')">12 Meses</button>
+    <button class="edit-toggle" id="editToggle" onclick="toggleEdit()">✏ Modo edición</button>
+    <button class="footer-btn save" onclick="saveData()">💾 Guardar</button>
+    <button class="footer-btn" onclick="window.print()">⬇ Exportar</button>
+  </div>
+</div>
+
+<div class="main">
+
+<!-- BANNER GESTIÓN PRESENCIAL -->
+<div class="presencial-banner">
+  <span class="presencial-badge">🗺 GESTIÓN PRESENCIAL</span>
+  <span>Gestiono cuentas con <strong>visitas presenciales, levantamiento en terreno y reuniones con stakeholders operacionales y comerciales</strong>. Disponibilidad de movilización propia para cobertura en toda la Región Metropolitana y regiones. La presencialidad no ha sido una limitante — es parte activa de mi metodología comercial.</span>
+</div>
+
+<!-- ─── SECCIÓN 1: PORTFOLIO ─── -->
+<div class="sec-head">
+  <span class="sec-num">01</span>
+  <span class="sec-title">Customer Portfolio Overview · Cartera de Clientes Estratégicos Chile</span>
+  <span class="sec-action">→ Acción: Priorizar cuentas y activar retención</span>
+</div>
+
+<div class="kpi-grid" style="margin-bottom:10px;">
+  <div class="kpi blue">
+    <div class="kpi-label">Cuentas Activas</div>
+    <div class="kpi-val" id="kpi-cuentas">47</div>
+    <div class="kpi-delta up">↑ +3 YTD · Nuevas cuentas</div>
+  </div>
+  <div class="kpi green">
+    <div class="kpi-label">Revenue Total (CLP)</div>
+    <div class="kpi-val" id="kpi-revenue">$3.420M</div>
+    <div class="kpi-delta up">↑ +11.2% vs año anterior</div>
+  </div>
+  <div class="kpi purple">
+    <div class="kpi-label">Volumen Pooling</div>
+    <div class="kpi-val" id="kpi-volumen">2.4M</div>
+    <div class="kpi-delta flat">pallets/viajes YTD</div>
+  </div>
+  <div class="kpi teal">
+    <div class="kpi-label">Retención Cartera</div>
+    <div class="kpi-val" id="kpi-retencion">94.7%</div>
+    <div class="kpi-delta up">↑ +1.2pp vs Q1</div>
+  </div>
+  <div class="kpi amber">
+    <div class="kpi-label">Net Revenue Retention</div>
+    <div class="kpi-val" id="kpi-nrr">108%</div>
+    <div class="kpi-delta up">↑ Sobre objetivo · Expansión</div>
+  </div>
+</div>
+
+<div class="g23">
+  <!-- HEALTH SCORE TABLE -->
+  <div class="card">
+    <div class="card-title">
+      <div class="card-title-left">📊 Customer Health Score · Ranking por Revenue</div>
+      <div class="card-badge">Visita presencial activa</div>
+    </div>
+    <table class="ht">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Cliente</th>
+          <th>Segmento</th>
+          <th>Revenue</th>
+          <th>Health</th>
+          <th>Próxima acción</th>
+        </tr>
+      </thead>
+      <tbody id="clienteTable">
+        <tr>
+          <td style="color:var(--text3);font-family:var(--mono)">01</td>
+          <td><div class="client-name">Cencosud</div><div class="client-seg">Retail · Tier 1</div></td>
+          <td><span style="color:var(--text3);font-size:10px">🛒 Retail</span></td>
+          <td><span class="rev-editable" id="rev1" contenteditable="false">$640M</span></td>
+          <td><span class="hs-badge hs-g">92</span></td>
+          <td><button class="accion-btn" onclick="showAccion('Cencosud','Propuesta IBC expansión + revisión contrato Q3')">+ Oportunidad</button></td>
+        </tr>
+        <tr>
+          <td style="color:var(--text3);font-family:var(--mono)">02</td>
+          <td><div class="client-name">Walmart Chile</div><div class="client-seg">Retail · Tier 1</div></td>
+          <td><span style="color:var(--text3);font-size:10px">🛒 Retail</span></td>
+          <td><span class="rev-editable" id="rev2" contenteditable="false">$580M</span></td>
+          <td><span class="hs-badge hs-g">88</span></td>
+          <td><button class="accion-btn" onclick="showAccion('Walmart Chile','Expansión rutas norte · Oferta volumen Q3')">QBR Jul</button></td>
+        </tr>
+        <tr>
+          <td style="color:var(--text3);font-family:var(--mono)">03</td>
+          <td><div class="client-name">Nestlé Chile</div><div class="client-seg">FMCG · Tier 1</div></td>
+          <td><span style="color:var(--text3);font-size:10px">🍫 FMCG</span></td>
+          <td><span class="rev-editable" id="rev3" contenteditable="false">$490M</span></td>
+          <td><span class="hs-badge hs-g">85</span></td>
+          <td><button class="accion-btn" onclick="showAccion('Nestlé Chile','Renovación contrato + upgrade volumen estimado +$35M')">Renovar</button></td>
+        </tr>
+        <tr>
+          <td style="color:var(--text3);font-family:var(--mono)">04</td>
+          <td><div class="client-name">Agrosuper</div><div class="client-seg">Manufactura · Tier 1</div></td>
+          <td><span style="color:var(--text3);font-size:10px">🏭 Manuf.</span></td>
+          <td><span class="rev-editable" id="rev4" contenteditable="false">$410M</span></td>
+          <td><span class="hs-badge hs-y">68</span></td>
+          <td><button class="accion-btn urgent" onclick="showAccion('Agrosuper','Visita terreno urgente · Volumen cayó 17% · Riesgo renovación')">⚠ Visitar</button></td>
+        </tr>
+        <tr>
+          <td style="color:var(--text3);font-family:var(--mono)">05</td>
+          <td><div class="client-name">CCU</div><div class="client-seg">FMCG · Tier 2</div></td>
+          <td><span style="color:var(--text3);font-size:10px">🍺 FMCG</span></td>
+          <td><span class="rev-editable" id="rev5" contenteditable="false">$340M</span></td>
+          <td><span class="hs-badge hs-y">62</span></td>
+          <td><button class="accion-btn urgent" onclick="showAccion('CCU','Revisión pricing · Margen bajo 20% · Agendar reunión comercial')">⚠ Pricing</button></td>
+        </tr>
+        <tr>
+          <td style="color:var(--text3);font-family:var(--mono)">06</td>
+          <td><div class="client-name">CMPC</div><div class="client-seg">Manufactura · Tier 2</div></td>
+          <td><span style="color:var(--text3);font-size:10px">🏭 Manuf.</span></td>
+          <td><span class="rev-editable" id="rev6" contenteditable="false">$270M</span></td>
+          <td><span class="hs-badge hs-y">58</span></td>
+          <td><button class="accion-btn urgent" onclick="showAccion('CMPC','NPS 29 crítico · Plan rescate CX · EBR esta semana')">⚠ CX Urgente</button></td>
+        </tr>
+        <tr>
+          <td style="color:var(--text3);font-family:var(--mono)">07</td>
+          <td><div class="client-name">Falabella Retail</div><div class="client-seg">Retail · Tier 2</div></td>
+          <td><span style="color:var(--text3);font-size:10px">🛍 Retail</span></td>
+          <td><span class="rev-editable" id="rev7" contenteditable="false">$190M</span></td>
+          <td><span class="hs-badge hs-r">42</span></td>
+          <td><button class="accion-btn urgent" onclick="showAccion('Falabella','CRÍTICO: Vol −23%, NPS 26. Escalar a gerencia. Visita presencial hoy.')">🚨 Crítico</button></td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="display:flex;gap:10px;margin-top:10px;padding-top:8px;border-top:1px solid var(--border);">
+      <span style="display:flex;align-items:center;gap:4px;font-size:9px;color:var(--text3);"><span class="dot dot-g"></span>Saludable (70+)</span>
+      <span style="display:flex;align-items:center;gap:4px;font-size:9px;color:var(--text3);"><span class="dot dot-y"></span>En riesgo (45–69)</span>
+      <span style="display:flex;align-items:center;gap:4px;font-size:9px;color:var(--text3);"><span class="dot dot-r"></span>Crítico (&lt;45)</span>
+      <span style="margin-left:auto;font-size:9px;color:var(--text3);">Click en acción → abre plan comercial</span>
+    </div>
+  </div>
+
+  <!-- REVENUE CHART -->
+  <div class="card">
+    <div class="card-title">📈 Revenue por Cuenta · Top 7 (CLP millones)</div>
+    <div class="chart-wrap" style="height:270px;">
+      <canvas id="revenueChart" role="img" aria-label="Gráfico de barras horizontales mostrando revenue por cliente Chile"></canvas>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+      <span style="display:flex;align-items:center;gap:3px;font-size:9px;color:var(--text3);"><span style="width:8px;height:8px;border-radius:2px;background:#1d6fa8"></span>Saludable</span>
+      <span style="display:flex;align-items:center;gap:3px;font-size:9px;color:var(--text3);"><span style="width:8px;height:8px;border-radius:2px;background:#d29922"></span>En riesgo</span>
+      <span style="display:flex;align-items:center;gap:3px;font-size:9px;color:var(--text3);"><span style="width:8px;height:8px;border-radius:2px;background:#da3633"></span>Crítico</span>
+    </div>
+  </div>
+</div>
+
+<!-- ─── SECCIÓN 2: CRECIMIENTO ─── -->
+<div class="sec-head">
+  <span class="sec-num">02</span>
+  <span class="sec-title">Crecimiento & Desempeño Comercial · Pipeline y Expansión</span>
+  <span class="sec-action">→ Acción: Abrir oportunidades y generar visitas de expansión</span>
+</div>
+
+<div class="g3">
+  <!-- FUNNEL -->
+  <div class="card">
+    <div class="card-title">
+      <div class="card-title-left">🎯 Pipeline Comercial · Funnel de Ventas</div>
+    </div>
+    <div class="funnel" id="funnelContainer">
+      <div class="funnel-step">
+        <div class="funnel-lbl">Prospección</div>
+        <div class="funnel-bar-bg"><div class="funnel-bar-fill" style="width:100%;background:#1d6fa8;"><span class="funnel-fill-val">38</span></div></div>
+        <div class="funnel-right">$1.880M</div>
+      </div>
+      <div class="funnel-step">
+        <div class="funnel-lbl">Calificado</div>
+        <div class="funnel-bar-bg"><div class="funnel-bar-fill" style="width:76%;background:#2563a8;"><span class="funnel-fill-val">29</span></div></div>
+        <div class="funnel-right">$1.435M</div>
+      </div>
+      <div class="funnel-step">
+        <div class="funnel-lbl">Propuesta enviada</div>
+        <div class="funnel-bar-bg"><div class="funnel-bar-fill" style="width:53%;background:#3a7ca5;"><span class="funnel-fill-val">20</span></div></div>
+        <div class="funnel-right">$990M</div>
+      </div>
+      <div class="funnel-step">
+        <div class="funnel-lbl">Negociación</div>
+        <div class="funnel-bar-bg"><div class="funnel-bar-fill" style="width:29%;background:#0d8a6a;"><span class="funnel-fill-val">11</span></div></div>
+        <div class="funnel-right">$545M</div>
+      </div>
+      <div class="funnel-step">
+        <div class="funnel-lbl">Cerrado ganado</div>
+        <div class="funnel-bar-bg"><div class="funnel-bar-fill" style="width:16%;background:#1a7a4a;"><span class="funnel-fill-val">6</span></div></div>
+        <div class="funnel-right">$298M</div>
+      </div>
+    </div>
+    <div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border);display:flex;gap:12px;">
+      <div><div style="font-size:9px;color:var(--text3)">Tasa conversión</div><div style="font-size:14px;font-weight:500;font-family:var(--mono);color:var(--text)" id="kpi-conv">15.8%</div></div>
+      <div><div style="font-size:9px;color:var(--text3)">Deal promedio</div><div style="font-size:14px;font-weight:500;font-family:var(--mono);color:var(--text)" id="kpi-deal">$49.7M</div></div>
+      <div><div style="font-size:9px;color:var(--text3)">Ciclo de venta</div><div style="font-size:14px;font-weight:500;font-family:var(--mono);color:var(--text)">42 días</div></div>
+    </div>
+  </div>
+
+  <!-- EXPANSION LANES -->
+  <div class="card">
+    <div class="card-title">🗺 Expansión de Rutas Logísticas · Chile</div>
+    <div class="route-mini">
+      <div class="route-card"><div class="route-val" id="route-lanes">+14</div><div class="route-delta">↑ nuevas</div><div class="route-lbl">Rutas activas</div></div>
+      <div class="route-card"><div class="route-val" id="route-reg">8</div><div class="route-delta">↑ +3</div><div class="route-lbl">Regiones</div></div>
+      <div class="route-card"><div class="route-val" id="route-rev">$210M</div><div class="route-delta">↑ expansión</div><div class="route-lbl">Revenue rutas</div></div>
+    </div>
+    <div class="chart-wrap" style="height:130px;">
+      <canvas id="laneChart" role="img" aria-label="Barras de expansión de rutas por trimestre Chile"></canvas>
+    </div>
+    <div style="font-size:10px;color:var(--text3);margin-top:8px;">📍 Principales corredores: RM–Valparaíso · RM–Biobío · RM–Maule · Norte grande (Arica–Iquique)</div>
+  </div>
+
+  <!-- CROSS SELLING -->
+  <div class="card">
+    <div class="card-title">🔀 Cross-Selling & Upselling</div>
+    <div class="mini-stats" style="margin-bottom:10px;">
+      <div class="mini-stat"><div class="mini-stat-lbl">Revenue cross-sell</div><div class="mini-stat-val" id="cs-rev">$370M</div></div>
+      <div class="mini-stat"><div class="mini-stat-lbl">Cuentas 2+ productos</div><div class="mini-stat-val" id="cs-acc">31</div></div>
+    </div>
+    <div class="chart-wrap" style="height:120px;">
+      <canvas id="crossChart" role="img" aria-label="Donut de mix de productos cross-sell"></canvas>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">
+      <span style="display:flex;align-items:center;gap:3px;font-size:9px;color:var(--text3);"><span style="width:7px;height:7px;border-radius:2px;background:#1d6fa8"></span>Pallets 58%</span>
+      <span style="display:flex;align-items:center;gap:3px;font-size:9px;color:var(--text3);"><span style="width:7px;height:7px;border-radius:2px;background:#0d8a6a"></span>Cajas 22%</span>
+      <span style="display:flex;align-items:center;gap:3px;font-size:9px;color:var(--text3);"><span style="width:7px;height:7px;border-radius:2px;background:#6e40c9"></span>IBC 12%</span>
+      <span style="display:flex;align-items:center;gap:3px;font-size:9px;color:var(--text3);"><span style="width:7px;height:7px;border-radius:2px;background:#e3a008"></span>Digital 8%</span>
+    </div>
+  </div>
+</div>
+
+<!-- ─── SECCIÓN 3: RENTABILIDAD ─── -->
+<div class="sec-head">
+  <span class="sec-num">03</span>
+  <span class="sec-title">Rentabilidad & Eficiencia Operacional · Análisis por Cuenta</span>
+  <span class="sec-action">→ Acción: Revisar pricing y mejorar cost-to-serve</span>
+</div>
+
+<div class="g2">
+  <!-- MATRIZ -->
+  <div class="card">
+    <div class="card-title">
+      <div class="card-title-left">💹 Matriz Revenue vs Margen · Clientes Chile</div>
+      <div style="display:flex;gap:8px;">
+        <span style="display:flex;align-items:center;gap:3px;font-size:9px;color:var(--text3);"><span style="width:7px;height:7px;border-radius:50%;background:#1d6fa8"></span>FMCG</span>
+        <span style="display:flex;align-items:center;gap:3px;font-size:9px;color:var(--text3);"><span style="width:7px;height:7px;border-radius:50%;background:#0d8a6a"></span>Retail</span>
+        <span style="display:flex;align-items:center;gap:3px;font-size:9px;color:var(--text3);"><span style="width:7px;height:7px;border-radius:50%;background:#6e40c9"></span>Manuf.</span>
+      </div>
+    </div>
+    <div class="chart-wrap" style="height:210px;">
+      <canvas id="matrixChart" role="img" aria-label="Scatter matrix de revenue vs margen por cliente en Chile"></canvas>
+    </div>
+  </div>
+
+  <!-- EFICIENCIA -->
+  <div class="card">
+    <div class="card-title">⚙️ KPIs de Eficiencia Operacional</div>
+    <div class="mini-stats" style="margin-bottom:12px;">
+      <div class="mini-stat">
+        <div class="mini-stat-lbl">Utilización de activos</div>
+        <div class="mini-stat-val up" id="kpi-util">87.3%</div>
+      </div>
+      <div class="mini-stat">
+        <div class="mini-stat-lbl">Cost-to-serve promedio</div>
+        <div class="mini-stat-val" id="kpi-cts">$9.200</div>
+      </div>
+      <div class="mini-stat">
+        <div class="mini-stat-lbl">Margen promedio cartera</div>
+        <div class="mini-stat-val" id="kpi-margen">31.2%</div>
+      </div>
+      <div class="mini-stat">
+        <div class="mini-stat-lbl">Ciclo pallet (días)</div>
+        <div class="mini-stat-val" id="kpi-ciclo">4.2</div>
+      </div>
+    </div>
+    <div class="card-title" style="font-size:10px;margin-bottom:6px;">Cuentas rentables vs no rentables</div>
+    <div class="chart-wrap" style="height:100px;">
+      <canvas id="profitChart" role="img" aria-label="Barras apiladas de cuentas rentables vs no rentables por segmento"></canvas>
+    </div>
+    <div style="font-size:9px;color:var(--text3);margin-top:6px;">💡 Cuentas con margen &lt;20% requieren revisión de pricing · Programar visita presencial de renegociación</div>
+  </div>
+</div>
+
+<!-- ─── SECCIÓN 4: CX ─── -->
+<div class="sec-head">
+  <span class="sec-num">04</span>
+  <span class="sec-title">Customer Experience (CX) · NPS, SLA & Gestión de Incidentes</span>
+  <span class="sec-action">→ Acción: Activar plan CX en cuentas críticas con visita presencial</span>
+</div>
+
+<div class="g3">
+  <!-- NPS -->
+  <div class="card">
+    <div class="card-title">😊 Net Promoter Score · Tendencia</div>
+    <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:10px;">
+      <span class="nps-big" id="nps-val">+54</span>
+      <div>
+        <div style="font-size:10px;color:var(--text3)">Net Promoter Score</div>
+        <div style="font-size:11px;color:var(--accent2)">↑ +6 puntos vs Q1</div>
+      </div>
+    </div>
+    <div class="chart-wrap" style="height:100px;">
+      <canvas id="npsChart" role="img" aria-label="Línea de tendencia NPS últimos 4 trimestres"></canvas>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px;font-size:9px;color:var(--text3);">
+      <span>Promotores: <strong style="color:#3fb950">62%</strong></span>
+      <span>Pasivos: <strong style="color:var(--text2)">24%</strong></span>
+      <span>Detractores: <strong style="color:#f85149">14%</strong></span>
+    </div>
+  </div>
+
+  <!-- SLA -->
+  <div class="card">
+    <div class="card-title">✅ SLA Compliance · Semáforo de Servicio</div>
+    <div style="display:flex;gap:10px;margin-bottom:12px;">
+      <div style="text-align:center;flex:1;">
+        <div style="font-size:20px;font-weight:500;font-family:var(--mono);color:#3fb950" id="sla-global">96.8%</div>
+        <div style="font-size:9px;color:var(--text3)">SLA global</div>
+      </div>
+      <div style="text-align:center;flex:1;">
+        <div style="font-size:20px;font-weight:500;font-family:var(--mono);color:#f85149" id="sla-breach">3.2%</div>
+        <div style="font-size:9px;color:var(--text3)">Incumplimiento</div>
+      </div>
+    </div>
+    <div class="sla-row">
+      <div class="sla-lbl">Entrega a tiempo</div>
+      <div class="sla-pct" id="sla1" style="color:#3fb950">98.2%</div>
+      <div class="sla-semaforo sla-ok"></div>
+    </div>
+    <div class="sla-row">
+      <div class="sla-lbl">Disponibilidad de activos</div>
+      <div class="sla-pct" id="sla2" style="color:#3fb950">97.1%</div>
+      <div class="sla-semaforo sla-ok"></div>
+    </div>
+    <div class="sla-row">
+      <div class="sla-lbl">Precisión de facturación</div>
+      <div class="sla-pct" id="sla3" style="color:#d29922">91.4%</div>
+      <div class="sla-semaforo sla-warn"></div>
+    </div>
+    <div class="sla-row">
+      <div class="sla-lbl">Tasa de daños</div>
+      <div class="sla-pct" id="sla4" style="color:#f85149">88.0%</div>
+      <div class="sla-semaforo sla-crit"></div>
+    </div>
+  </div>
+
+  <!-- INCIDENTES -->
+  <div class="card">
+    <div class="card-title">⏱ Gestión de Incidentes</div>
+    <div class="mini-stats" style="margin-bottom:10px;">
+      <div class="mini-stat"><div class="mini-stat-lbl">Tiempo resolución promedio</div><div class="mini-stat-val" id="kpi-resol">18.4h</div></div>
+      <div class="mini-stat"><div class="mini-stat-lbl">Tasa de reclamos</div><div class="mini-stat-val down" id="kpi-reclamo">2.3%</div></div>
+    </div>
+    <div class="chart-wrap" style="height:100px;">
+      <canvas id="incidentChart" role="img" aria-label="Línea de tendencia de tasa de reclamos últimos 6 meses"></canvas>
+    </div>
+    <div style="font-size:9px;color:var(--text3);margin-top:6px;">📞 Protocolo: Reclamo → Confirmación 2h → Resolución 18h → Feedback 48h</div>
+  </div>
+</div>
+
+<!-- ─── GESTOR DE VISITAS ─── -->
+<div class="sec-head">
+  <span class="sec-num">05</span>
+  <span class="sec-title">Gestor de Visitas Presenciales · Terreno & Agenda Comercial</span>
+  <span class="sec-action">→ Acción: Programar visitas y levantar información en terreno</span>
+</div>
+
+<div class="g2">
+  <div class="card">
+    <div class="card-title">📅 Calendario de Visitas · Semana actual</div>
+    <div class="visit-grid">
+      <div class="visit-day"><div class="visit-day-lbl">LUN</div><div class="visit-cell done" onclick="toggleVisit(this)">Cencosud</div></div>
+      <div class="visit-day"><div class="visit-day-lbl">MAR</div><div class="visit-cell done" onclick="toggleVisit(this)">Nestlé</div></div>
+      <div class="visit-day"><div class="visit-day-lbl">MIÉ</div><div class="visit-cell pending" onclick="toggleVisit(this)">Agrosuper</div></div>
+      <div class="visit-day"><div class="visit-day-lbl">JUE</div><div class="visit-cell pending" onclick="toggleVisit(this)">Falabella</div></div>
+      <div class="visit-day"><div class="visit-day-lbl">VIE</div><div class="visit-cell pending" onclick="toggleVisit(this)">CCU</div></div>
+      <div class="visit-day"><div class="visit-day-lbl">LUN+</div><div class="visit-cell free" onclick="toggleVisit(this)">Libre</div></div>
+      <div class="visit-day"><div class="visit-day-lbl">MAR+</div><div class="visit-cell free" onclick="toggleVisit(this)">Libre</div></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:8px;font-size:9px;color:var(--text3);">
+      <span style="display:flex;align-items:center;gap:3px;"><span style="width:8px;height:8px;border-radius:2px;background:rgba(29,111,168,0.3)"></span>Realizada</span>
+      <span style="display:flex;align-items:center;gap:3px;"><span style="width:8px;height:8px;border-radius:2px;background:rgba(210,153,34,0.2)"></span>Pendiente</span>
+      <span style="display:flex;align-items:center;gap:3px;"><span style="width:8px;height:8px;border-radius:2px;background:var(--bg3)"></span>Disponible</span>
+    </div>
+    <div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border);font-size:9px;color:var(--text3);">
+      🚗 Movilización: disponibilidad propia o flexibilidad total · No ha sido limitante en la gestión · Cobertura RM + regiones
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📊 Métricas de Gestión Presencial</div>
+    <div class="mini-stats">
+      <div class="mini-stat"><div class="mini-stat-lbl">Visitas mes actual</div><div class="mini-stat-val" id="vis-mes">23</div></div>
+      <div class="mini-stat"><div class="mini-stat-lbl">Cuentas visitadas</div><div class="mini-stat-val" id="vis-acc">12</div></div>
+      <div class="mini-stat"><div class="mini-stat-lbl">Stakeholders levantados</div><div class="mini-stat-val" id="vis-sh">38</div></div>
+      <div class="mini-stat"><div class="mini-stat-lbl">Opp. detectadas en terreno</div><div class="mini-stat-val" id="vis-opp" style="color:var(--accent2)">7</div></div>
+    </div>
+    <div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border);font-size:9px;color:var(--text3);">
+      💡 Metodología: Levantamiento en terreno con operaciones + reuniones con stakeholders comerciales + actas de visita + seguimiento CRM
+    </div>
+  </div>
+</div>
+
+<!-- ─── SECCIÓN 6: INSIGHTS & TRIGGERS ─── -->
+<div class="alert-section">
+  <div class="alert-header">
+    <span class="alert-tag">⚡ INSIGHTS & ACTION TRIGGERS</span>
+    <span class="alert-title">Inteligencia comercial en tiempo real · Señales de acción · Cartera Chile</span>
+    <span class="alert-sub">Actualizado: Mayo 2026</span>
+  </div>
+  <div class="alert-body">
+
+    <!-- RIESGOS -->
+    <div class="alert-col">
+      <div class="alert-col-title" style="color:#f85149;">⚠ Top 5 cuentas en riesgo · Activar retención</div>
+      <div class="risk-item">
+        <div class="risk-n">01</div>
+        <div class="risk-content">
+          <div class="risk-name">Falabella Retail</div>
+          <div class="risk-reason">Vol −23% · NPS 26 · SLA breach · 🚨 Visita presencial hoy</div>
+        </div>
+        <button class="accion-btn urgent" onclick="showAccion('Falabella','Plan rescate: 1) Visita presencial urgente 2) EBR ejecutivo 3) Propuesta CX 4) Escalar gerencia')">→ Actuar</button>
+      </div>
+      <div class="risk-item">
+        <div class="risk-n">02</div>
+        <div class="risk-content">
+          <div class="risk-name">Agrosuper</div>
+          <div class="risk-reason">Vol −17% · Renovación Q3 · Oferta competidor</div>
+        </div>
+        <button class="accion-btn urgent" onclick="showAccion('Agrosuper','Plan retención: 1) Visita operaciones terreno 2) Propuesta valor diferencial 3) Fast-track pricing')">→ Actuar</button>
+      </div>
+      <div class="risk-item">
+        <div class="risk-n">03</div>
+        <div class="risk-content">
+          <div class="risk-name">CCU</div>
+          <div class="risk-reason">Margen −8pp · Revisión pricing pendiente</div>
+        </div>
+        <button class="accion-btn urgent" onclick="showAccion('CCU','Revisión pricing: 1) Análisis cost-to-serve 2) Propuesta nuevo modelo 3) Reunión stakeholders financieros')">→ Actuar</button>
+      </div>
+      <div class="risk-item">
+        <div class="risk-n">04</div>
+        <div class="risk-content">
+          <div class="risk-name">CMPC</div>
+          <div class="risk-reason">NPS 29 crítico · Tasa reclamos 6.1%</div>
+        </div>
+        <button class="accion-btn urgent" onclick="showAccion('CMPC','Plan CX: 1) EBR urgente 2) Diagnóstico ops 3) Plan mejora con SLAs específicos 4) Follow-up semanal')">→ Actuar</button>
+      </div>
+      <div class="risk-item">
+        <div class="risk-n">05</div>
+        <div class="risk-content">
+          <div class="risk-name">Walmart Chile</div>
+          <div class="risk-reason">Contacto clave rotó · Brecha relacional</div>
+        </div>
+        <button class="accion-btn" onclick="showAccion('Walmart Chile','Gestión relacional: 1) Mapear nuevo stakeholder 2) Visita presencial de introducción 3) Propuesta valor actualizada')">→ Actuar</button>
+      </div>
+    </div>
+
+    <!-- OPORTUNIDADES -->
+    <div class="alert-col">
+      <div class="alert-col-title" style="color:#3fb950;">🚀 Top 5 oportunidades de expansión · Abrir pipeline</div>
+      <div class="risk-item">
+        <div class="risk-n">01</div>
+        <div class="risk-content">
+          <div class="risk-name">Cencosud</div>
+          <div class="opp-desc">Upsell IBC + nuevas rutas sur · Visita agendada</div>
+          <div class="opp-val">Est. +$42M CLP</div>
+        </div>
+      </div>
+      <div class="risk-item">
+        <div class="risk-n">02</div>
+        <div class="risk-content">
+          <div class="risk-name">Nestlé Chile</div>
+          <div class="opp-desc">Renovación + upgrade volumen Q3 · Decisor identificado</div>
+          <div class="opp-val">Est. +$35M CLP</div>
+        </div>
+      </div>
+      <div class="risk-item">
+        <div class="risk-n">03</div>
+        <div class="risk-content">
+          <div class="risk-name">Walmart Chile</div>
+          <div class="opp-desc">Expansión corredor norte (Iquique–Antofagasta)</div>
+          <div class="opp-val">Est. +$31M CLP</div>
+        </div>
+      </div>
+      <div class="risk-item">
+        <div class="risk-n">04</div>
+        <div class="risk-content">
+          <div class="risk-name">Agrosuper</div>
+          <div class="opp-desc">Piloto digital tracking + cajas pooling exportación</div>
+          <div class="opp-val">Est. +$28M CLP</div>
+        </div>
+      </div>
+      <div class="risk-item">
+        <div class="risk-n">05</div>
+        <div class="risk-content">
+          <div class="risk-name">CMPC</div>
+          <div class="opp-desc">Expansión pooling papel · Nueva planta Biobío</div>
+          <div class="opp-val">Est. +$19.5M CLP</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRIGGERS + ACCIONES -->
+    <div class="alert-col">
+      <div class="alert-col-title" style="color:#d29922;">⚙ Triggers automáticos & Próximas acciones comerciales</div>
+      <div class="trigger-item trigger-t-r">
+        <span class="trigger-icon">🔴</span>
+        <div class="trigger-text"><strong>Volumen cae &gt;15%</strong> — Falabella y Agrosuper → Activar revisión de cuenta + visita presencial ejecutiva + escalación gerencial inmediata</div>
+      </div>
+      <div class="trigger-item trigger-t-y">
+        <span class="trigger-icon">🟡</span>
+        <div class="trigger-text"><strong>Margen bajo 20%</strong> — CCU → Revisión modelo de pricing + propuesta renegociación + análisis cost-to-serve segmentado</div>
+      </div>
+      <div class="trigger-item trigger-t-r">
+        <span class="trigger-icon">🔴</span>
+        <div class="trigger-text"><strong>NPS &lt; 35</strong> — Falabella y CMPC → Plan rescate CX + EBR en 5 días + visita terreno operacional</div>
+      </div>
+      <div class="trigger-item trigger-t-b">
+        <span class="trigger-icon">🔵</span>
+        <div class="trigger-text"><strong>Health Score &gt; 85</strong> — Cencosud y Walmart → Activar propuesta upsell y expansión de rutas</div>
+      </div>
+      <div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border);">
+        <div style="font-size:9px;color:var(--text3);font-weight:600;letter-spacing:0.5px;margin-bottom:8px;text-transform:uppercase;">📋 Agenda comercial · Próximas acciones</div>
+        <div class="action-row"><div class="action-date">19 May</div><div class="action-text">EBR Falabella · Plan rescate CX presencial</div><span class="priority-badge p-urg">Urgente</span></div>
+        <div class="action-row"><div class="action-date">22 May</div><div class="action-text">Pricing Agrosuper · Renegociación contrato</div><span class="priority-badge p-urg">Urgente</span></div>
+        <div class="action-row"><div class="action-date">27 May</div><div class="action-text">Demo IBC upsell · Cencosud RM</div><span class="priority-badge p-high">Alto</span></div>
+        <div class="action-row"><div class="action-date">3 Jun</div><div class="action-text">QBR renovación Nestlé Chile + Q3</div><span class="priority-badge p-high">Alto</span></div>
+        <div class="action-row"><div class="action-date">10 Jun</div><div class="action-text">Propuesta expansión norte · Walmart</div><span class="priority-badge p-med">Medio</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- end main -->
+
+<!-- FOOTER -->
+<div class="footer">
+  <div>🇨🇱 Cartera Chile · Retail, FMCG & Manufactura · Pooling Logístico · Economía Circular | Fuentes: CRM · ERP · Ops Platform · Encuestas CX · Actualización: Mayo 2026</div>
+  <div class="footer-right">
+    <span style="font-size:10px;color:var(--text3);">Herramienta de gestión comercial y toma de decisiones</span>
+    <button class="footer-btn" onclick="resetData()">↺ Resetear</button>
+    <button class="footer-btn save" onclick="saveData()">💾 Guardar datos</button>
+  </div>
+</div>
+
+<!-- MODAL DE ACCIÓN -->
+<div id="accionModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999;align-items:center;justify-content:center;">
+  <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:24px;max-width:480px;width:90%;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div style="font-size:13px;font-weight:500;color:var(--text)" id="modalTitle">Plan de Acción</div>
+      <button onclick="closeModal()" style="background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;">×</button>
+    </div>
+    <div style="font-size:12px;color:var(--text2);line-height:1.7;margin-bottom:16px;" id="modalBody"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;">
+      <button onclick="closeModal()" class="footer-btn">Cerrar</button>
+      <button onclick="closeModal()" class="footer-btn save">✓ Agendar acción</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let editMode = false;
+let charts = {};
+const STORAGE_KEY = 'kae_chile_data';
+
+const defaultData = {
+  kpiCuentas: '47', kpiRevenue: '$3.420M', kpiVolumen: '2.4M',
+  kpiRetencion: '94.7%', kpiNrr: '108%',
+  rev1:'$640M',rev2:'$580M',rev3:'$490M',rev4:'$410M',rev5:'$340M',rev6:'$270M',rev7:'$190M',
+  routeLanes:'+14',routeReg:'8',routeRev:'$210M',
+  csRev:'$370M',csAcc:'31',
+  kpiUtil:'87.3%',kpiCts:'$9.200',kpiMargen:'31.2%',kpiCiclo:'4.2',
+  npsVal:'+54',slaGlobal:'96.8%',slaBreach:'3.2%',
+  sla1:'98.2%',sla2:'97.1%',sla3:'91.4%',sla4:'88.0%',
+  kpiResol:'18.4h',kpiReclamo:'2.3%',
+  visMes:'23',visAcc:'12',visSh:'38',visOpp:'7',
+  kpiConv:'15.8%',kpiDeal:'$49.7M'
+};
+
+function loadData() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : defaultData;
+  } catch(e) { return defaultData; }
+}
+
+function saveData() {
+  const data = {};
+  Object.keys(defaultData).forEach(k => {
+    const el = document.getElementById('kpi-'+k.replace(/([A-Z])/g,'-$1').toLowerCase()) ||
+               document.getElementById(k.replace(/([A-Z])/g,'-$1').toLowerCase()) ||
+               document.getElementById(k);
+    if (el) data[k] = el.textContent.trim();
+    else data[k] = defaultData[k];
+  });
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
+  showToast('✓ Datos guardados correctamente');
+}
+
+function resetData() {
+  if (confirm('¿Resetear todos los datos a valores por defecto?')) {
+    localStorage.removeItem(STORAGE_KEY);
+    location.reload();
+  }
+}
+
+function toggleEdit() {
+  editMode = !editMode;
+  const btn = document.getElementById('editToggle');
+  btn.textContent = editMode ? '✓ Guardar cambios' : '✏ Modo edición';
+  btn.classList.toggle('active', editMode);
+  document.body.classList.toggle('edit-mode', editMode);
+
+  const editables = document.querySelectorAll('.kpi-val, .sla-pct, .mini-stat-val, .rev-editable, .route-val, .nps-big, .mini-stat-val');
+  editables.forEach(el => {
+    el.contentEditable = editMode ? 'true' : 'false';
+    el.addEventListener('blur', () => { updateCharts(); });
+  });
+
+  if (!editMode) { saveData(); updateCharts(); }
+}
+
+function setPeriod(btn, period) {
+  document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  showToast('Período: ' + period);
+}
+
+function toggleVisit(cell) {
+  const states = ['free','pending','done'];
+  const labels = { free: cell.textContent, pending: cell.textContent, done: cell.textContent };
+  const current = cell.className.split(' ').find(c => states.includes(c));
+  const next = states[(states.indexOf(current)+1)%states.length];
+  cell.className = 'visit-cell ' + next;
+}
+
+function showAccion(client, plan) {
+  document.getElementById('modalTitle').textContent = '📋 Plan Comercial · ' + client;
+  const steps = plan.split('·').join('\n•').split(') ').join(')\n  ');
+  document.getElementById('modalBody').innerHTML =
+    '<div style="background:var(--bg3);border-radius:6px;padding:12px;font-family:var(--mono);font-size:11px;white-space:pre-wrap;color:var(--text2)">' +
+    plan + '</div><div style="margin-top:12px;font-size:11px;color:var(--text3);">🚗 Acción presencial requerida · Registrar en CRM después de visita</div>';
+  const modal = document.getElementById('accionModal');
+  modal.style.display = 'flex';
+}
+
+function closeModal() {
+  document.getElementById('accionModal').style.display = 'none';
+}
+
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#1c2230;border:1px solid rgba(46,160,67,0.3);color:#3fb950;padding:8px 16px;border-radius:6px;font-size:11px;z-index:9999;transition:opacity 0.3s;';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => { t.style.opacity='0'; setTimeout(()=>t.remove(),300); }, 2500);
+}
+
+function initCharts() {
+  const textC = 'rgba(139,148,158,0.7)';
+  const gridC = 'rgba(255,255,255,0.04)';
+
+  // Revenue Chart
+  charts.revenue = new Chart(document.getElementById('revenueChart'), {
+    type: 'bar',
+    data: {
+      labels: ['Cencosud','Walmart CL','Nestlé CL','Agrosuper','CCU','CMPC','Falabella'],
+      datasets: [{
+        data: [640,580,490,410,340,270,190],
+        backgroundColor: ['#1d6fa8','#1d6fa8','#1d6fa8','#d29922','#d29922','#d29922','#da3633'],
+        borderRadius: 3, borderSkipped: false
+      }]
+    },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ' $'+ctx.raw+'M CLP' } } },
+      scales: {
+        x: { grid:{color:gridC}, ticks:{color:textC,font:{size:9},callback:v=>'$'+v+'M'}, border:{display:false} },
+        y: { grid:{display:false}, ticks:{color:textC,font:{size:10}}, border:{display:false} }
+      }
+    }
+  });
+
+  // Lane Chart
+  charts.lane = new Chart(document.getElementById('laneChart'), {
+    type: 'bar',
+    data: {
+      labels: ["Q3'25","Q4'25","Q1'26","Q2'26"],
+      datasets: [{ data:[3,5,8,14], backgroundColor:['#2d4a6a','#1d6fa8','#0d8a6a','#3fb950'], borderRadius:4 }]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{grid:{display:false},ticks:{color:textC,font:{size:10}},border:{display:false}},
+        y:{grid:{color:gridC},ticks:{color:textC,font:{size:10}},border:{display:false}}
+      }
+    }
+  });
+
+  // Cross-sell donut
+  charts.cross = new Chart(document.getElementById('crossChart'), {
+    type: 'doughnut',
+    data: {
+      labels:['Pallets','Cajas','IBC','Digital'],
+      datasets:[{data:[58,22,12,8],backgroundColor:['#1d6fa8','#0d8a6a','#6e40c9','#e3a008'],borderWidth:0}]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      cutout:'65%'
+    }
+  });
+
+  // Matrix bubble
+  charts.matrix = new Chart(document.getElementById('matrixChart'), {
+    type:'bubble',
+    data:{
+      datasets:[
+        {label:'FMCG',backgroundColor:'rgba(29,111,168,0.6)',data:[{x:490,y:38,r:10},{x:340,y:28,r:8},{x:280,y:36,r:7}]},
+        {label:'Retail',backgroundColor:'rgba(13,138,106,0.6)',data:[{x:640,y:31,r:12},{x:580,y:33,r:11},{x:190,y:12,r:5}]},
+        {label:'Manuf.',backgroundColor:'rgba(110,64,201,0.6)',data:[{x:410,y:22,r:9},{x:270,y:29,r:7}]}
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>'$'+ctx.raw.x+'M · '+ctx.raw.y+'% margen'}}},
+      scales:{
+        x:{min:0,max:750,title:{display:true,text:'Revenue ($M CLP)',color:textC,font:{size:9}},grid:{color:gridC},ticks:{color:textC,font:{size:9}},border:{display:false}},
+        y:{min:0,max:50,title:{display:true,text:'Margen %',color:textC,font:{size:9}},grid:{color:gridC},ticks:{color:textC,font:{size:9}},border:{display:false}}
+      }
+    }
+  });
+
+  // Profit stacked
+  charts.profit = new Chart(document.getElementById('profitChart'), {
+    type:'bar',
+    data:{
+      labels:['FMCG','Retail','Manuf.'],
+      datasets:[
+        {label:'Rentable',data:[78,65,71],backgroundColor:'#0d8a6a',borderRadius:3},
+        {label:'No rentable',data:[22,35,29],backgroundColor:'#da3633',borderRadius:3}
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{stacked:true,grid:{display:false},ticks:{color:textC,font:{size:10}},border:{display:false}},
+        y:{stacked:true,grid:{color:gridC},ticks:{color:textC,font:{size:9},callback:v=>v+'%'},border:{display:false}}
+      }
+    }
+  });
+
+  // NPS line
+  charts.nps = new Chart(document.getElementById('npsChart'), {
+    type:'line',
+    data:{
+      labels:["Q3'25","Q4'25","Q1'26","Q2'26"],
+      datasets:[{data:[41,44,48,54],borderColor:'#3fb950',backgroundColor:'rgba(63,185,80,0.06)',borderWidth:2,pointRadius:3,pointBackgroundColor:'#3fb950',fill:true,tension:0.4}]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{grid:{display:false},ticks:{color:textC,font:{size:9}},border:{display:false}},
+        y:{min:30,max:65,grid:{color:gridC},ticks:{color:textC,font:{size:9}},border:{display:false}}
+      }
+    }
+  });
+
+  // Incident line
+  charts.incident = new Chart(document.getElementById('incidentChart'), {
+    type:'line',
+    data:{
+      labels:['Ene','Feb','Mar','Abr','May','Jun'],
+      datasets:[{data:[3.1,2.8,2.9,2.5,2.4,2.3],borderColor:'#e3a008',backgroundColor:'rgba(227,160,8,0.06)',borderWidth:2,pointRadius:3,pointBackgroundColor:'#e3a008',fill:true,tension:0.4}]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{grid:{display:false},ticks:{color:textC,font:{size:9}},border:{display:false}},
+        y:{min:1.5,max:4,grid:{color:gridC},ticks:{color:textC,font:{size:9},callback:v=>v+'%'},border:{display:false}}
+      }
+    }
+  });
+}
+
+function updateCharts() {
+  // Revenue chart update from editable fields
+  const revVals = ['rev1','rev2','rev3','rev4','rev5','rev6','rev7'].map(id => {
+    const el = document.getElementById(id);
+    if (!el) return 0;
+    return parseFloat(el.textContent.replace(/[^0-9.]/g,'')) || 0;
+  });
+  if (charts.revenue) {
+    charts.revenue.data.datasets[0].data = revVals;
+    charts.revenue.update();
+  }
+}
+
+function updateSLASemaforos() {
+  const slaIds = ['sla1','sla2','sla3','sla4'];
+  slaIds.forEach((id, i) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const val = parseFloat(el.textContent);
+    const sem = el.parentElement.querySelector('.sla-semaforo');
+    if (val >= 95) { el.style.color='#3fb950'; sem.className='sla-semaforo sla-ok'; }
+    else if (val >= 90) { el.style.color='#d29922'; sem.className='sla-semaforo sla-warn'; }
+    else { el.style.color='#f85149'; sem.className='sla-semaforo sla-crit'; }
+  });
+}
+
+// Observe SLA changes
+document.addEventListener('DOMContentLoaded', () => {
+  initCharts();
+
+  // Load saved data
+  const saved = loadData();
+  const idMap = {
+    'kpi-cuentas':'kpiCuentas','kpi-revenue':'kpiRevenue','kpi-volumen':'kpiVolumen',
+    'kpi-retencion':'kpiRetencion','kpi-nrr':'kpiNrr',
+    'rev1':'rev1','rev2':'rev2','rev3':'rev3','rev4':'rev4','rev5':'rev5','rev6':'rev6','rev7':'rev7',
+    'route-lanes':'routeLanes','route-reg':'routeReg','route-rev':'routeRev',
+    'cs-rev':'csRev','cs-acc':'csAcc',
+    'kpi-util':'kpiUtil','kpi-cts':'kpiCts','kpi-margen':'kpiMargen','kpi-ciclo':'kpiCiclo',
+    'nps-val':'npsVal','sla-global':'slaGlobal','sla-breach':'slaBreach',
+    'sla1':'sla1','sla2':'sla2','sla3':'sla3','sla4':'sla4',
+    'kpi-resol':'kpiResol','kpi-reclamo':'kpiReclamo',
+    'vis-mes':'visMes','vis-acc':'visAcc','vis-sh':'visSh','vis-opp':'visOpp',
+    'kpi-conv':'kpiConv','kpi-deal':'kpiDeal'
+  };
+  Object.entries(idMap).forEach(([elId, dataKey]) => {
+    const el = document.getElementById(elId);
+    if (el && saved[dataKey]) el.textContent = saved[dataKey];
+  });
+
+  // Listen for editable changes
+  document.querySelectorAll('[contenteditable]').forEach(el => {
+    el.addEventListener('input', () => { updateCharts(); updateSLASemaforos(); });
+  });
+
+  // Close modal on backdrop
+  document.getElementById('accionModal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+
+  updateSLASemaforos();
+});
+</script>
+</body>
+</html>
